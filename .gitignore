@@ -1,0 +1,11 @@
+own_reports/raw/
+own_reports/deid/
+own_reports/imported/
+reports.db
+chroma_db/
+venv/
+__pycache__/
+*.pyc
+mtsamples.csv
+.DS_Store
+philter/

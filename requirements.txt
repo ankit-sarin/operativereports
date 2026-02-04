@@ -1,0 +1,30 @@
+# Web Interface
+gradio>=4.0.0
+
+# Vector Database (RAG)
+chromadb>=0.4.0
+
+# Embeddings
+sentence-transformers>=2.0.0
+
+# LLM Connection
+ollama>=0.1.0
+
+# Document Export
+python-docx>=0.8.11
+
+# Database
+aiosqlite>=0.19.0
+pandas>=2.0.0
+
+# Text Processing
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-text-splitters>=0.2.0
+
+# NLP (required by Philter)
+nltk>=3.8.0
+
+# OCR Support (NEW)
+pdf2image>=1.16.0
+Pillow>=10.0.0
