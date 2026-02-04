@@ -8,8 +8,10 @@ Two-tab interface:
 
 import gradio as gr
 import pandas as pd
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 import os
+import json
+import ollama
 
 from database import init_db, add_report, get_report, get_all_reports, delete_report, get_report_count_by_source
 from rag_engine import RAGEngine
@@ -219,6 +221,106 @@ def delete_report_handler(report_id: int) -> str:
 
 # ============== TAB 2 FUNCTIONS ==============
 
+def extract_from_brief_note(
+    pasted_text: str,
+    uploaded_file
+) -> Tuple[str, str, str, str, str, str, str, str, str, str, str, str, str, str]:
+    """
+    Extract structured data from a brief operative note and return field values.
+
+    Returns tuple of:
+    (procedure_type, preop_diagnosis, postop_diagnosis, surgeon_name, assistant,
+     anesthesia_type, indications, findings, procedure_details, specimens,
+     drains, ebl, complications, status_message)
+    """
+    raw_text = ""
+    empty_result = ("", "", "", "", "", "", "", "", "", "", "", "", "", "")
+
+    try:
+        # Determine input source
+        if uploaded_file is not None:
+            # File uploaded - try OCR
+            file_path = uploaded_file.name if hasattr(uploaded_file, 'name') else uploaded_file
+            ocr_result = ocr_engine.process_file(file_path)
+
+            if ocr_result.startswith("Error:"):
+                # OCR failed - likely model not installed
+                return empty_result[:-1] + ("OCR model not yet available. Please paste the text instead.",)
+
+            raw_text = ocr_result
+        elif pasted_text and pasted_text.strip():
+            raw_text = pasted_text.strip()
+        else:
+            return empty_result[:-1] + ("Please paste text or upload a file.",)
+
+        # De-identify with Philter
+        deid_text = deidentify_text(raw_text)
+
+        if deid_text.startswith("Error:"):
+            return empty_result[:-1] + (f"De-identification failed: {deid_text}",)
+
+        # Build extraction prompt
+        extraction_prompt = """Extract the following fields from this brief operative note.
+Return ONLY a valid JSON object with these keys:
+procedure_type, preop_diagnosis, postop_diagnosis, surgeon_name, assistant,
+anesthesia_type, indications, findings, procedure_details, specimens,
+drains, ebl, complications.
+
+If a field is not mentioned, use an empty string for that field.
+
+Brief Operative Note:
+"""
+        extraction_prompt += deid_text
+
+        # Call Ollama to extract fields
+        response = ollama.chat(
+            model="qwen2.5:32b",
+            messages=[
+                {"role": "system", "content": "You are a medical data extraction assistant. Extract structured information from operative notes and return valid JSON only."},
+                {"role": "user", "content": extraction_prompt}
+            ],
+            options={
+                "temperature": 0.1,  # Low temperature for consistent extraction
+                "num_predict": 1024,
+            }
+        )
+
+        response_text = response['message']['content']
+
+        # Try to parse JSON from response
+        # Handle cases where model might wrap JSON in markdown code blocks
+        json_text = response_text
+        if "```json" in json_text:
+            json_text = json_text.split("```json")[1].split("```")[0]
+        elif "```" in json_text:
+            json_text = json_text.split("```")[1].split("```")[0]
+
+        extracted = json.loads(json_text.strip())
+
+        # Return extracted values in order
+        return (
+            extracted.get("procedure_type", ""),
+            extracted.get("preop_diagnosis", ""),
+            extracted.get("postop_diagnosis", ""),
+            extracted.get("surgeon_name", ""),
+            extracted.get("assistant", ""),
+            extracted.get("anesthesia_type", ""),
+            extracted.get("indications", ""),
+            extracted.get("findings", ""),
+            extracted.get("procedure_details", ""),
+            extracted.get("specimens", ""),
+            extracted.get("drains", ""),
+            extracted.get("ebl", ""),
+            extracted.get("complications", ""),
+            "Fields extracted successfully. Review and edit as needed."
+        )
+
+    except json.JSONDecodeError as e:
+        return empty_result[:-1] + (f"Failed to parse extraction response as JSON: {str(e)}",)
+    except Exception as e:
+        return empty_result[:-1] + (f"Error extracting fields: {str(e)}",)
+
+
 def generate_report_handler(
     procedure_type: str,
     preop_diagnosis: str,
@@ -404,13 +506,37 @@ with gr.Blocks(title="Operative Report Generator") as app:
         with gr.TabItem("Generate Report"):
             gr.Markdown("### Generate a complete operative report from procedure details")
 
+            # Import from Brief Op Note section
+            with gr.Accordion("Import from Brief Op Note (auto-fill form)", open=False):
+                gr.Markdown("*Paste or upload a brief operative note to automatically extract and fill the form fields below.*")
+
+                with gr.Row():
+                    with gr.Column():
+                        import_text = gr.Textbox(
+                            label="Paste Brief Op Note Text",
+                            placeholder="Paste the brief operative note here...",
+                            lines=10
+                        )
+                    with gr.Column():
+                        import_file = gr.File(
+                            label="Or Upload Brief Op Note (image/PDF)",
+                            file_types=[".pdf", ".png", ".jpg", ".jpeg"],
+                            type="filepath"
+                        )
+
+                extract_btn = gr.Button("Extract & Fill Form", variant="secondary")
+                extract_status = gr.Textbox(label="Extraction Status", interactive=False)
+
+            gr.Markdown("---")
+
             with gr.Row():
                 # Left column - inputs
                 with gr.Column(scale=1):
                     gen_procedure = gr.Dropdown(
                         label="Procedure Type",
                         choices=PROCEDURE_OPTIONS,
-                        value="Laparoscopic Cholecystectomy"
+                        value="Laparoscopic Cholecystectomy",
+                        allow_custom_value=True
                     )
 
                     with gr.Row():
@@ -483,6 +609,19 @@ with gr.Blocks(title="Operative Report Generator") as app:
                 fn=export_report_handler,
                 inputs=[generated_report],
                 outputs=[export_file]
+            )
+
+            # Wire up extract button to fill form fields
+            extract_btn.click(
+                fn=extract_from_brief_note,
+                inputs=[import_text, import_file],
+                outputs=[
+                    gen_procedure, gen_preop, gen_postop,
+                    gen_surgeon, gen_assistant, gen_anesthesia,
+                    gen_indications, gen_findings, gen_details,
+                    gen_specimens, gen_drains, gen_ebl, gen_complications,
+                    extract_status
+                ]
             )
 
 
