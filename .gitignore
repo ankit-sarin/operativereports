@@ -1,11 +1,24 @@
+# PHI protection — NEVER commit raw clinical notes
 own_reports/raw/
 own_reports/deid/
 own_reports/imported/
+
+# Database and vectors (large files, regenerable)
 reports.db
 chroma_db/
+
+# Virtual environment
 venv/
+
+# Python
 __pycache__/
 *.pyc
+
+# Kaggle source
 mtsamples.csv
+
+# OS
 .DS_Store
+
+# Nested repos
 philter/
