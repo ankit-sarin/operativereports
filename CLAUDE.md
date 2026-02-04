@@ -18,10 +18,12 @@
 - load_mtsamples.py — One-time Kaggle data loader
 
 ## Architecture
-- Track 1 (Tab 1):
+- Track 1 (Tab 1: Add Report):
   - Text paste → Philter → SQLite + ChromaDB
   - PDF/Image upload → GLM-OCR → Philter → SQLite + ChromaDB
-- Track 2 (Tab 2): Fill form → RAG finds similar → Ollama generates report
+- Track 2 (Tab 2: Generate Report):
+  - Fill form → RAG finds similar → Ollama generates report
+  - Import from Brief Op Note: paste/upload → Philter → Ollama extracts fields → auto-fill form
 - Bulk path: put files in own_reports/raw/ → python bulk_import.py
 
 ## Models (Ollama)
