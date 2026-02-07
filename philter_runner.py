@@ -6,6 +6,7 @@ Wraps the Philter de-identification tool located in ./philter/
 
 import os
 import subprocess
+import sys
 import tempfile
 import shutil
 from pathlib import Path
@@ -45,7 +46,7 @@ def deidentify_text(raw_text: str, config: str = DEFAULT_CONFIG) -> str:
         # Run Philter
         result = subprocess.run(
             [
-                "python", str(DEIDPIPE_SCRIPT),
+                sys.executable, str(DEIDPIPE_SCRIPT),
                 "-i", input_dir,
                 "-o", output_dir,
                 "-f", config,
@@ -121,7 +122,7 @@ def deidentify_directory(
         # Run Philter on the entire directory
         result = subprocess.run(
             [
-                "python", str(DEIDPIPE_SCRIPT),
+                sys.executable, str(DEIDPIPE_SCRIPT),
                 "-i", input_dir,
                 "-o", output_dir,
                 "-f", config,
