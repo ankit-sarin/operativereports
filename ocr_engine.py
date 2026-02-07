@@ -1,5 +1,5 @@
 """
-OCR Engine using GLM-OCR via Ollama for extracting text from images and PDFs.
+OCR Engine using MiniCPM-V via Ollama for extracting text from images and PDFs.
 """
 
 import os
@@ -9,25 +9,25 @@ from typing import Optional
 import ollama
 from pdf2image import convert_from_path
 
-MODEL_NAME = "glm-ocr"
-OCR_PROMPT = "Text Recognition:"
+MODEL_NAME = "minicpm-v"
+OCR_PROMPT = "Extract all text from this image. Return only the extracted text, preserving the original formatting and structure."
 
 
 class OCREngine:
-    """OCR engine using GLM-OCR via Ollama for text extraction."""
+    """OCR engine using MiniCPM-V via Ollama for text extraction."""
 
     def __init__(self, model: str = MODEL_NAME):
         """
         Initialize the OCR engine.
 
         Args:
-            model: The Ollama model to use for OCR (default: glm-ocr)
+            model: The Ollama model to use for OCR (default: minicpm-v)
         """
         self.model = model
 
     def process_image(self, image_path: str) -> str:
         """
-        Extract text from an image file using GLM-OCR.
+        Extract text from an image file using MiniCPM-V.
 
         Args:
             image_path: Path to a .png/.jpg/.jpeg image file
@@ -166,22 +166,38 @@ class OCREngine:
 
 
 if __name__ == "__main__":
-    print("OCR Engine using GLM-OCR via Ollama")
+    import sys
+
+    print("OCR Engine using MiniCPM-V via Ollama")
     print("=" * 50)
-    print()
-    print("Usage:")
-    print("  from ocr_engine import OCREngine")
-    print()
-    print("  engine = OCREngine()")
-    print()
-    print("  # Process an image")
-    print("  text = engine.process_image('document.png')")
-    print()
-    print("  # Process a PDF")
-    print("  text = engine.process_pdf('document.pdf')")
-    print()
-    print("  # Auto-detect file type")
-    print("  text = engine.process_file('document.pdf')")
-    print()
-    print("Note: Requires glm-ocr model to be installed in Ollama.")
-    print("      Run: ollama pull glm-ocr")
+
+    # If a file path is provided, test OCR on it
+    if len(sys.argv) > 1:
+        test_file = sys.argv[1]
+        print(f"\nTesting OCR on: {test_file}")
+        print("-" * 50)
+
+        engine = OCREngine()
+        result = engine.process_file(test_file)
+        print(result)
+    else:
+        print()
+        print("Usage:")
+        print("  from ocr_engine import OCREngine")
+        print()
+        print("  engine = OCREngine()")
+        print()
+        print("  # Process an image")
+        print("  text = engine.process_image('document.png')")
+        print()
+        print("  # Process a PDF")
+        print("  text = engine.process_pdf('document.pdf')")
+        print()
+        print("  # Auto-detect file type")
+        print("  text = engine.process_file('document.pdf')")
+        print()
+        print("Test OCR on a file:")
+        print("  python ocr_engine.py <image_path>")
+        print()
+        print("Note: Requires minicpm-v model to be installed in Ollama.")
+        print("      Run: ollama pull minicpm-v")

@@ -11,7 +11,7 @@
 - database.py — SQLite schema and CRUD
 - rag_engine.py — ChromaDB embeddings and retrieval
 - report_generator.py — Ollama LLM generation
-- ocr_engine.py — GLM-OCR wrapper for PDF/image processing
+- ocr_engine.py — MiniCPM-V wrapper for PDF/image processing
 - philter_runner.py — Philter de-identification wrapper
 - bulk_import.py — Terminal tool for batch importing reports
 - export_report.py — DOCX export
@@ -20,7 +20,7 @@
 ## Architecture
 - Track 1 (Tab 1: Add Report):
   - Text paste → Philter → SQLite + ChromaDB
-  - PDF/Image upload → GLM-OCR → Philter → SQLite + ChromaDB
+  - PDF/Image upload → MiniCPM-V → Philter → SQLite + ChromaDB
 - Track 2 (Tab 2: Generate Report):
   - Fill form → RAG finds similar → Ollama generates report
   - Import from Brief Op Note: paste/upload → Philter → Ollama extracts fields → auto-fill form
@@ -28,7 +28,7 @@
 
 ## Models (Ollama)
 - qwen2.5:32b — Report generation (19GB)
-- glm-ocr — OCR for scanned documents (2.2GB)
+- minicpm-v — Vision-language model for OCR (5.5GB)
 
 ## Database
 - reports.db (SQLite) — all operative reports
