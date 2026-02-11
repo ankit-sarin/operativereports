@@ -377,7 +377,11 @@ def export_report_handler(report_text: str) -> Optional[str]:
 
 # ============== BUILD GRADIO APP ==============
 
-with gr.Blocks(title="Operative Report Generator") as app:
+_css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gradio-theme.css")
+with open(_css_path, "r") as f:
+    brand_css = f.read()
+
+with gr.Blocks(title="Operative Report Generator", css=brand_css) as app:
 
     # Header
     gr.Markdown(

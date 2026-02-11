@@ -16,6 +16,7 @@
 - bulk_import.py — Terminal tool for batch importing reports
 - export_report.py — DOCX export
 - load_mtsamples.py — One-time Kaggle data loader
+- gradio-theme.css — Digital Surgeon brand theme (Fraunces + IBM Plex Sans, Mist Teal palette)
 
 ## Architecture
 - Track 1 (Tab 1: Add Report):
